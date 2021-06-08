@@ -1,3 +1,3 @@
 # Fantasy-UI
 
-![UI](Capture.png)
+![UI](Capture.PNG)
