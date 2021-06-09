@@ -9,6 +9,9 @@ let price_div = document.getElementById('info')
 let price = document.getElementById('info').textContent
 price = parseFloat(price)
 
+var map = new Map()
+var user_pick = '{"theTeam":[]}'
+
 
 function filterbyPosition(position){
     var result = players.filter( element => element.Player_position ==position)
@@ -52,7 +55,8 @@ function hide_col(){
 function formation(){
 
   document.getElementById('info').textContent = 12
-
+  addPlayerToArray('reset')
+  map = new Map()
   
   let defender = " "
   let midfielder = " "
@@ -87,14 +91,31 @@ function formation(){
 }
 
 //add player
-var user_pick = []
-let map = new Map()
-
 function addplayer(data, id){
   let player = JSON.parse(data.dataset.item)  
-  user_pick.push = player
   let player_id = document.getElementById(id)
-  let decision = price_tracker(player.Player_price)
+  
+  //player repeat prevent
+  if(map[player.Player_name]){
+    return
+  }
+
+  if(map[id]){
+    user_pick = JSON.parse(user_pick)
+    for (let [i, players] of user_pick['theTeam'].entries()) {
+      if (players.Player_name == map[id]) {
+        map.delete(players.Player_name)
+        map[players.teamName] -=1
+        price_tracker(-players.Player_price)
+        user_pick['theTeam'].splice(i, 1);   
+        user_pick = JSON.stringify(user_pick)   
+      }
+   }
+  }
+
+
+
+  //player name splitting
   let name = player.Player_name
   let arr = name.split(' ');
   if(arr[1]){
@@ -104,6 +125,7 @@ function addplayer(data, id){
     name = arr[0]
   }
 
+  //team count
   if(map[player.teamName] == 3){
     return
   }else if(!map[player.teamName]){
@@ -112,20 +134,40 @@ function addplayer(data, id){
     map[player.teamName] +=1
   }
 
+
+  //final decision
+  let decision = price_tracker(player.Player_price)
   if(decision == false){
     return
   }
   else{
     player_id.innerHTML = " "
-    player_id.innerHTML = `<div class="select-card"><img class="card-image" src="${player.Player_image}" ><br>${name}</div>`
+    player_id.innerHTML = `<div class="select-card"><img class="card-image" src="${player.Player_image}" ><br>${name}<br>${player.Player_price}m</div>`
+  
+    var result = addPlayerToArray(player)
+    console.log(result)
+    map[player.Player_name] = player.Player_name
+    map[id] = player.Player_name
   }
 }
 
 
 
+//add player to array for sending it to server
+function addPlayerToArray(player){
+  if(player == 'reset'){
+    user_pick = '{"theTeam":[]}'
+    return user_pick
+  }else{
+    user_pick = JSON.parse(user_pick)
+    user_pick['theTeam'].push(player);
+    user_pick = JSON.stringify(user_pick)
+    return user_pick
+  }
+}
+
+
 //price tracker
-
-
 function price_tracker(money){
   let price_div = document.getElementById('info')
   let price = document.getElementById('info').textContent
